@@ -6,7 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="HardwareComponents\" />
+    <Folder Include="HardwareComponents\Cartridge\" />
+    <Folder Include="HardwareComponents\CPU\" />
+    <Folder Include="HardwareComponents\Bus\" />
+    <Folder Include="HardwareComponents\Timer\" />
+    <Folder Include="HardwareComponents\PPU\" />
   </ItemGroup>
 
 </Project>
