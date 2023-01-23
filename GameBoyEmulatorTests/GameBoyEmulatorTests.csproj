@@ -25,6 +25,7 @@
     <Folder Include="Unit\HarwareComponents\CPU\" />
     <Folder Include="Unit\HarwareComponents\Timer\" />
     <Folder Include="Unit\HarwareComponents\PPU\" />
+    <Folder Include="Unit\Emulator\" />
   </ItemGroup>
 
 </Project>
