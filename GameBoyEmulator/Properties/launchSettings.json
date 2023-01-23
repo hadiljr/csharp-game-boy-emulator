@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GameBoyEmulator": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\..\\..\\..\\.test_roms\\cpu_instrs.gb"
+    }
+  }
+}
