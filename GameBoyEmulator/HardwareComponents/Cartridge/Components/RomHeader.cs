@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace GameBoyEmulator.HardwareComponents.Cartridge.Header
+namespace GameBoyEmulator.HardwareComponents.Cartridge.Constants
 {
     public struct RomHeader
     {
@@ -21,9 +21,19 @@ namespace GameBoyEmulator.HardwareComponents.Cartridge.Header
         public byte RomSize;
         public byte RamSize;
         public byte DestinationCode;
-        public byte OldLicenseeCode;
+        public byte LicenseeCode;
         public byte Version;
         public byte Checksum;
         public byte GlobalChecksum;
+
+        public override string ToString()
+        {
+            return  $"Title: \t\t{Title}\n"+
+                    $"Type: \t\t{Type} ({RomTypes.NameCartridgeType(Type)})\n" +
+                    $"ROM Size: \t{32 << RomSize} KB\n" +
+                    $"RAM Size: \t{RamSize}\n" +
+                    $"LIC Code: \t{LicenseeCode} ({LicenseeCodes.LicenseeName(LicenseeCode)})\n" +
+                    $"ROM Version: \t{Version}";
+        }
     }
 }
