@@ -14,7 +14,7 @@ namespace GameBoyEmulator.Emulator
     {
         private Context _context = new Context();
 
-        private IBus _bus;
+        
         private ICpu _cpu;
         private IPpu _ppu;
         private ITimer _timer;
@@ -42,7 +42,7 @@ namespace GameBoyEmulator.Emulator
             try
             {
                 _cartridge = new DebugCartridge();
-                await _cartridge.LoadCartridge(_cartridgeFile);
+                _cartridge.LoadCartridge(_cartridgeFile);
                 Console.WriteLine(_cartridge.DebugMessage());
                 
             }
@@ -51,8 +51,8 @@ namespace GameBoyEmulator.Emulator
                 Console.WriteLine(ex.Message);
             }
 
-            _bus = new Bus(_cartridge);
-            _cpu = new Cpu(_bus, this);
+            BusInstance.SetCartridge(_cartridge);
+            _cpu = new Cpu( this);
             _cpu.CpuInit();
 
             Console.WriteLine("== Instructions ==");
@@ -75,7 +75,7 @@ namespace GameBoyEmulator.Emulator
             Console.Read();
         }
 
-        public void cicles(int number)
+        public static void cicles(int number)
         {
             //throw new NotImplementedException();
         }

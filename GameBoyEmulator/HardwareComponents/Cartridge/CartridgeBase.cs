@@ -9,19 +9,21 @@ namespace GameBoyEmulator.HardwareComponents.Cartridge
     {
         protected readonly CartridgeModel cartridgeModel = new CartridgeModel();
 
-        public virtual async Task LoadCartridge(string file)
+        public virtual void LoadCartridge(string file)
         {
             cartridgeModel.Data = new CartridgeMemoryStream();
             File.OpenRead(Path.GetFullPath(file)).CopyTo(cartridgeModel.Data);
 
             cartridgeModel.RomSize = cartridgeModel.Data.GetRomSize();
-            cartridgeModel.RomHeader = await cartridgeModel.Data.GetRomHeader();
+
+            var header = cartridgeModel.Data.GetRomHeader();
+
+            cartridgeModel.RomHeader = header;
         }
 
-        public async Task<byte> Read(ushort address)
-        {
-            return await cartridgeModel.Data.ReadAdress(address);
-            
+        public byte Read(ushort address)
+        {    
+            return cartridgeModel.Data.ReadAdress(address); 
         }
 
         public void Write(ushort adress, byte value)

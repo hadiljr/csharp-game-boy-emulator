@@ -10,16 +10,13 @@ namespace GameBoyEmulator.HardwareComponents.CPU
     public class Cpu : ICpu
     {
         private readonly CpuContext _context;
-        private readonly CpuFetcher fetcher;
+        private readonly CpuFetcher fetcher;       
 
-        private readonly IBus _bus;
-
-        public Cpu(IBus bus, IGbEmulator gbEmulator)
+        public Cpu(IGbEmulator gbEmulator)
         {
-            _bus = bus;
             
             _context = new CpuContext();
-            fetcher = new CpuFetcher(_context, bus, gbEmulator);
+            fetcher = new CpuFetcher(_context, gbEmulator);
         }
 
         public void CpuInit()
@@ -33,16 +30,16 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             if (!_context.Halted)
             {
                 UInt16 pc = _context.Registers.PC;
-
-                fetcher.FetchInstruction().Wait();
-                fetcher.FetchData().Wait();
+                
+                fetcher.FetchInstruction();
+                fetcher.FetchData();
                 
                 var msg = string.Format("0x{0:X4}: {1} \t(0x{2:X4} 0x{3:X4} 0x{4:X4}) \tA: 0x{5:X4} B: 0x{6:X4} C: 0x{7:X4}",
                     pc,
                     InstructionList.GetInstructionName(_context.CurrentInstruction.Type),
                     _context.CurrentOpcode,
-                    _bus.Read((ushort)(pc + 1)),
-                    _bus.Read((ushort)(pc + 2)),
+                    BusInstance.Read((ushort)(pc + 1)),
+                    BusInstance.Read((ushort)(pc + 2)),
                     _context.Registers.A,
                     _context.Registers.B,
                     _context.Registers.C);

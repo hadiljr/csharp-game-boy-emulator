@@ -10,24 +10,22 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Components
     class CpuFetcher
     {
         private readonly CpuContext ctx;
-        private readonly IBus _bus;
         private readonly IGbEmulator _gbEmulator;
 
-        public CpuFetcher(CpuContext cpuContext, IBus bus, IGbEmulator gbEmulator)
+        public CpuFetcher(CpuContext cpuContext, IGbEmulator gbEmulator)
         {
             ctx = cpuContext;
-            _bus = bus;
             _gbEmulator = gbEmulator;
         }
 
-        public async Task FetchInstruction()
+        public void FetchInstruction()
         {
-            ctx.CurrentOpcode = await _bus.ReadAsync(ctx.Registers.PC);
+            ctx.CurrentOpcode = BusInstance.Read(ctx.Registers.PC);
             ctx.Registers.PC++;
             ctx.CurrentInstruction = InstructionList.InstructionByOpcode(ctx.CurrentOpcode);
         }
 
-        public async Task FetchData()
+        public void FetchData()
         {
             ctx.MemoryDestination = 0;
             ctx.DestinationIsMemory = false;
@@ -49,19 +47,19 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Components
 
 
                 case AdressModeType.AM_R_D8:
-                    ctx.FetchedData = await _bus.ReadAsync(ctx.Registers.PC);
-                    _gbEmulator.cicles(1);
+                    ctx.FetchedData = BusInstance.Read(ctx.Registers.PC);
+                    GbEmulator.cicles(1);
                     ctx.Registers.PC++;
                     return;
 
                 case AdressModeType.AM_R_D16:
                 case AdressModeType.AM_D16:
 
-                    UInt16 lo = await _bus.ReadAsync(ctx.Registers.PC);
-                    _gbEmulator.cicles(1);
+                    UInt16 lo = BusInstance.Read(ctx.Registers.PC);
+                    GbEmulator.cicles(1);
 
-                    UInt16 hi = await _bus.ReadAsync((UInt16)(ctx.Registers.PC + 1));
-                    _gbEmulator.cicles(1);
+                    UInt16 hi = BusInstance.Read((UInt16)(ctx.Registers.PC + 1));
+                    GbEmulator.cicles(1);
 
                     ctx.FetchedData = (UInt16)(lo | (hi << 8));
                     ctx.Registers.PC += 2;
@@ -69,7 +67,98 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Components
                     return;
 
                 case AdressModeType.AM_MR_R:
-                    //ctx.FetchedData =
+                    var addr = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register2.Value);
+                    if(ctx.CurrentInstruction.Register2 == RegisterType.RT_C)
+                    {
+                        addr |= 0xFF00;
+                    }
+
+                    ctx.FetchedData = BusInstance.Read(addr);
+                    GbEmulator.cicles(1);
+                    return;
+
+                case AdressModeType.AM_HLI_R:
+                    ctx.FetchedData = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register2.Value);
+                    ctx.MemoryDestination = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register1.Value);
+                    ctx.DestinationIsMemory = true;
+                    var regHL = ctx.Registers.ReadRegister(RegisterType.RT_HL);
+                    ctx.Registers.SetRegister(RegisterType.RT_HL, (UInt16)(regHL + 1));
+                    return;
+
+                case AdressModeType.AM_HLD_R:
+                    ctx.FetchedData = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register2.Value);
+                    ctx.MemoryDestination = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register1.Value);
+                    ctx.DestinationIsMemory = true;
+                    regHL = ctx.Registers.ReadRegister(RegisterType.RT_HL);
+                    ctx.Registers.SetRegister(RegisterType.RT_HL, (UInt16)(regHL - 1));
+                    return;
+
+                case AdressModeType.AM_R_A8:
+                    ctx.FetchedData = BusInstance.Read(ctx.Registers.PC);
+                    GbEmulator.cicles(1);
+                    ctx.Registers.PC++;
+                    return;
+
+                case AdressModeType.AM_A8_R:
+                    ctx.MemoryDestination = (UInt16)(BusInstance.Read(ctx.Registers.PC) | 0xFF00);
+                    ctx.DestinationIsMemory = true;
+                    GbEmulator.cicles(1);
+                    ctx.Registers.PC++;
+                    return;
+
+                case AdressModeType.AM_D8:
+                case AdressModeType.AM_HL_SPR:
+                    ctx.FetchedData = BusInstance.Read(ctx.Registers.PC);
+                    GbEmulator.cicles(1);
+                    ctx.Registers.PC++;
+                    return;
+
+                case AdressModeType.AM_A16_R:
+                case AdressModeType.AM_D16_R:
+                    lo = BusInstance.Read(ctx.Registers.PC);
+                    GbEmulator.cicles(1);
+
+                    hi = BusInstance.Read((UInt16)(ctx.Registers.PC+1));
+                    GbEmulator.cicles(1);
+
+                    ctx.MemoryDestination = (UInt16)(lo | (hi << 8));
+                    ctx.DestinationIsMemory = true;
+
+                    ctx.Registers.PC += 2;
+                    ctx.FetchedData = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register2.Value);
+                    return;
+
+                case AdressModeType.AM_MR_D8:
+                    ctx.FetchedData = BusInstance.Read(ctx.Registers.PC);
+                    GbEmulator.cicles(1);
+
+                    ctx.Registers.PC++;
+                    ctx.MemoryDestination = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register1.Value);
+                    ctx.DestinationIsMemory = true;
+                    return;
+
+                case AdressModeType.AM_MR:
+                    ctx.MemoryDestination = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register1.Value);
+                    ctx.DestinationIsMemory = true;
+                    ctx.FetchedData = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register1.Value);
+                    GbEmulator.cicles(1);
+                    return;
+
+                case AdressModeType.AM_R_A16:
+                    lo = BusInstance.Read(ctx.Registers.PC);
+                    GbEmulator.cicles(1);
+
+                    hi = BusInstance.Read((UInt16)(ctx.Registers.PC + 1));
+                    GbEmulator.cicles(1);
+
+                    addr = (UInt16)(lo | (hi << 8));
+
+                    ctx.Registers.PC += 2;
+                    ctx.FetchedData = BusInstance.Read(addr);
+                    GbEmulator.cicles(1);
+                    return;
+
+
 
                 default:
                     throw new Exception($"Unknown Addressing Mode! Mode: {ctx.CurrentInstruction.Mode} Opcode: {ctx.CurrentOpcode}");

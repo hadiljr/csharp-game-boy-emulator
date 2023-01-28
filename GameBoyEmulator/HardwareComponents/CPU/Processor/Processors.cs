@@ -1,5 +1,8 @@
-﻿using GameBoyEmulator.HardwareComponents.CPU.Instructions;
+﻿using GameBoyEmulator.Emulator;
+using GameBoyEmulator.HardwareComponents.Bus;
+using GameBoyEmulator.HardwareComponents.CPU.Instructions;
 using GameBoyEmulator.Util.Bit;
+using GameBoyEmulator.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,7 +30,38 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
         public static void ProcessIN_LD(CpuContext ctx)
         {
-            //TODO
+            if (ctx.DestinationIsMemory)
+            {
+                //16 bit register
+                if(ctx.CurrentInstruction.Register2.Value >= RegisterType.RT_AF)
+                {
+                    GbEmulator.cicles(1);
+                    BusInstance.Write16(ctx.MemoryDestination, ctx.FetchedData);
+
+                }
+                else
+                {
+                    BusInstance.Write(ctx.MemoryDestination, (byte)ctx.FetchedData);
+                }
+
+                return;
+            }
+
+            if (ctx.CurrentInstruction.Mode == AdressModeType.AM_HL_SPR)
+            {
+                bool hflag = (ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register2.Value)&0xF) + (ctx.FetchedData & 0xF) >= 0x10;
+                bool cflag = (ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register2.Value)&0xFF) + (ctx.FetchedData & 0xFF) >= 0x100;
+
+                SetCpuFlags(ctx, BIT_POSITION.OFF, BIT_POSITION.OFF, hflag.ToBitPosition(), cflag.ToBitPosition());
+
+                var reg2Data = ctx.Registers.ReadRegister(ctx.CurrentInstruction.Register2.Value);
+                var data = ctx.FetchedData;
+                ctx.Registers.SetRegister(ctx.CurrentInstruction.Register1.Value, (UInt16)(reg2Data + data));
+
+                return;
+            }
+
+            ctx.Registers.SetRegister(ctx.CurrentInstruction.Register1.Value, ctx.FetchedData);
         }
 
         public static void ProcessIN_XOR(CpuContext ctx)
@@ -42,7 +76,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             if (CheckCondition(ctx))
             {
                 ctx.Registers.PC = ctx.FetchedData;
-                ctx.GbEmulator.cicles(1);
+                GbEmulator.cicles(1);
             }
         }
 
@@ -51,7 +85,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             ctx.Registers.F = BitHelper.SetBitValue(ctx.Registers.F, 7, z);
             ctx.Registers.F = BitHelper.SetBitValue(ctx.Registers.F, 6, n);
             ctx.Registers.F = BitHelper.SetBitValue(ctx.Registers.F, 5, h);
-            ctx.Registers.F = BitHelper.SetBitValue(ctx.Registers.F, 5, c);
+            ctx.Registers.F = BitHelper.SetBitValue(ctx.Registers.F, 4, c);
         }
 
         private static bool CheckCondition(CpuContext ctx)

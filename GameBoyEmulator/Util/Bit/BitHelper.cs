@@ -3,14 +3,14 @@
 namespace GameBoyEmulator.Util.Bit
 {
 
-    enum BIT_POSITION
+    public enum BIT_POSITION
     {
-        ON,
-        OFF,
-        SAME
+        SAME = -1,
+        OFF = 0,
+        ON = 1
     }
 
-    class BitHelper
+    public class BitHelper
     {
         public static bool GetBitValue(byte value, byte position)
         {
@@ -35,21 +35,16 @@ namespace GameBoyEmulator.Util.Bit
 
         public static Tuple<byte,byte> ExtractTwoValuesOf8Bits(UInt16 value)
         {
-            byte first = (byte)(value & 0xFF);
-            byte second = (byte)((value >> 8)&0xFF);
+            byte first = (byte)((value >> 8) & 0xFF);
+            byte second = (byte)(value & 0xFF);
 
             return new Tuple<byte, byte>(first, second);
         }
 
         public static UInt16 CombineTwoValuesOf8bits(byte first, byte second)
         {
-            return (UInt16)((first & 0x0F) | ((second & 0x0F) << 4));
+            var result = (UInt16)((first << 8) | second);
+            return result;
         }
-
-        public static UInt16 Reverse(UInt16 value)
-        {
-            return (UInt16)(((value & 0xFF00) >> 8) | ((value & 0x00FF) << 8));
-        }
-
     }
 }

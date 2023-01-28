@@ -1,22 +1,19 @@
 ﻿using GameBoyEmulator.HardwareComponents.Cartridge;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GameBoyEmulator.HardwareComponents.Bus
 {
-    class Bus : IBus
+    static class BusInstance
     {
-        private readonly ICartridge _cartridge;
+        private static ICartridge _cartridge;
 
-        public Bus(ICartridge cartridge)
+
+        public static void SetCartridge(ICartridge cartridge)
         {
             _cartridge = cartridge;
-        }
-
-       
-
+        }       
+      
         // 0x0000 - 0x3FFF : ROM Bank 0
         // 0x4000 - 0x7FFF : ROM Bank 1 - Switchable
         // 0x8000 - 0x97FF : CHR RAM
@@ -31,52 +28,39 @@ namespace GameBoyEmulator.HardwareComponents.Bus
         // 0xFF00 - 0xFF7F : I/O Registers
         // 0xFF80 - 0xFFFE : Zero Page
 
-        public async Task<byte> ReadAsync(ushort address)
+       
+
+        public static ushort Read16(ushort address)
         {
-            if (address < 0x8000)
-            {
-                //ROM Data
-                return await _cartridge.Read(address);
-            }
-
-            throw new Exception($"Adress {address} not implemented.");
-        }
-
-        public async Task<ushort> Read16Async(ushort address)
-        {
-            var lo = await ReadAsync(address);
-            var hi = await ReadAsync((ushort)(address+1));
-
+            var lo = Read(address);
+            var hi = Read((ushort)(address+1));
             return (ushort)(lo | (hi << 8));
         }
 
-        public byte Read(ushort address)
+        public static byte Read(ushort address)
         {
             if (address < 0x8000)
             {
-                var task = _cartridge.Read(address);
-                task.Wait();
-                return task.Result;
+                return _cartridge.Read(address);
             }
 
             throw new Exception($"Adress {address} not implemented.");
         }
 
-        public async Task WriteAsync(ushort address, byte value)
+        public static void Write(ushort address, byte value)
         {
             if (address < 0x8000)
             {
                 //ROM Data
-                await _cartridge.Write(address, value);
-
+                _cartridge.Write(address, value);
                 return;
             }
         }
 
-        public async Task Write16Async(ushort address, ushort value)
+        public static void Write16(ushort address, ushort value)
         {
-            await WriteAsync((ushort)(address + 1), (byte)((value >> 8) & 0xFF));
-            await WriteAsync(address, (byte)(value & 0xFF));
+            Write((ushort)(address + 1), (byte)((value >> 8) & 0xFF));
+            Write(address, (byte)(value & 0xFF));
         }
     }
 }

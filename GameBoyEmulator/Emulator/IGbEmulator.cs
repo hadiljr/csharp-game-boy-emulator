@@ -7,7 +7,5 @@ namespace GameBoyEmulator.Emulator
         Context Context { get; }
 
         void Run();
-
-        void cicles(int number);
     }
 }

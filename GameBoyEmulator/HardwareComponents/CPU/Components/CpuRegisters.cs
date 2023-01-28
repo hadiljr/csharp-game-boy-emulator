@@ -51,7 +51,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Core
 
 
 
-        private void SetRegister(RegisterType registerType, UInt16 value)
+        public void SetRegister(RegisterType registerType, UInt16 value)
         {
             switch (registerType)
             {

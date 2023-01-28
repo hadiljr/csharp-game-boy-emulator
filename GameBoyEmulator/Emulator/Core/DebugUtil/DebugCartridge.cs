@@ -14,14 +14,14 @@ namespace GameBoyEmulator.Emulator.Core.Debug
             return msg.ToString();
         }
 
-        public override async Task LoadCartridge(string file)
+        public override void LoadCartridge(string file)
         {
-            await base.LoadCartridge(file);
+            base.LoadCartridge(file);
             msg.Clear();
             msg.AppendLine($"Cartridge File name: {file}");
             msg.AppendLine("\n== Cartridge Loaded ==\n");
             msg.AppendLine(cartridgeModel.RomHeader.ToString());
-            msg.AppendLine($"Checksum: \t{cartridgeModel.RomHeader.Checksum} - {await cartridgeModel.Data.ChecksumResult()}");
+            msg.AppendLine($"Checksum: \t{cartridgeModel.RomHeader.Checksum} - {cartridgeModel.Data.ChecksumResult()}");
         }
     }
 }
