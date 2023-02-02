@@ -1,6 +1,6 @@
 ﻿using GameBoyEmulator.Emulator.Core;
 using GameBoyEmulator.Emulator.Core.Debug;
-using GameBoyEmulator.HardwareComponents.Bus;
+using GameBoyEmulator.HardwareComponents.DataBus;
 using GameBoyEmulator.HardwareComponents.Cartridge;
 using GameBoyEmulator.HardwareComponents.CPU;
 using GameBoyEmulator.HardwareComponents.PPU;
@@ -14,8 +14,6 @@ namespace GameBoyEmulator.Emulator
     {
         private Context _context = new Context();
 
-        
-        private ICpu _cpu;
         private IPpu _ppu;
         private ITimer _timer;
         
@@ -30,14 +28,21 @@ namespace GameBoyEmulator.Emulator
 
         public void Run()
         {
-            _context.Running = true;
-            if (_context.RunMode.Equals(RunType.DEBUG))
+            try
             {
-                RunDebugMode().Wait();
+                _context.Running = true;
+                if (_context.RunMode.Equals(RunType.DEBUG))
+                {
+                    RunDebugMode();
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
-        private async Task RunDebugMode()
+        private void RunDebugMode()
         {
             try
             {
@@ -51,9 +56,8 @@ namespace GameBoyEmulator.Emulator
                 Console.WriteLine(ex.Message);
             }
 
-            BusInstance.SetCartridge(_cartridge);
-            _cpu = new Cpu( this);
-            _cpu.CpuInit();
+            Bus.SetCartridge(_cartridge);
+            Cpu.CpuInit();
 
             Console.WriteLine("== Instructions ==");
             while (_context.Running)
@@ -63,7 +67,7 @@ namespace GameBoyEmulator.Emulator
                     continue;
                 }
 
-                if (!_cpu.CpuStep())
+                if (!Cpu.CpuStep())
                 {
                     throw new Exception("CPU parou");
                 }

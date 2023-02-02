@@ -1,16 +1,11 @@
-﻿using GameBoyEmulator.Emulator;
-using GameBoyEmulator.HardwareComponents.Bus;
-using GameBoyEmulator.HardwareComponents.CPU.Core;
+﻿using GameBoyEmulator.HardwareComponents.CPU.Core;
 using GameBoyEmulator.HardwareComponents.CPU.Instructions;
 using GameBoyEmulator.Util.Bit;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GameBoyEmulator.HardwareComponents.CPU
 {
-    public class CpuContext
+    public class CpuState
     {
         public CpuRegisters Registers;
 
@@ -26,9 +21,15 @@ namespace GameBoyEmulator.HardwareComponents.CPU
 
         public bool DestinationIsMemory { get; set; }
 
-        public bool IntMasterEnabled { get; set; }
+        public bool InterruptionMasterEnabled { get; set; }
 
-        public CpuContext()
+        public bool EnableIME { get; set; }
+
+        public byte IeRegister { get; set; }
+
+        public byte InterruptionFlags { get; set; }
+
+        public CpuState()
         {
          
             Registers = new CpuRegisters();
@@ -37,6 +38,16 @@ namespace GameBoyEmulator.HardwareComponents.CPU
         public bool ZFlag()
         {
             return BitHelper.GetBitValue(Registers.F, 7);
+        }
+
+        public bool NFlag()
+        {
+            return BitHelper.GetBitValue(Registers.F, 6);
+        }
+
+        public bool HFlag()
+        {
+            return BitHelper.GetBitValue(Registers.F, 5);
         }
 
         public bool CFlag()
