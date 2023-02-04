@@ -1,38 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GameBoyEmulator.HardwareComponents.RamMemory
 {
-    public static class Ram
+    public class Ram : IRam
     {
-        private static RamDefinition _ram = new RamDefinition();
+        private RamDefinition _ram = new RamDefinition();
 
-        public static byte WRamRead(UInt16 address)
+        public Ram()
+        {
+            _ram.Init();
+        }
+      
+        public  byte WRamRead(UInt16 address)
         {
             address -= 0xC000;
 
             if (address >= 0x2000)
             {
-                throw new Exception(string.Format("INVALID WRAM ADDR 0x{0:X8}", address + 0xC000));
+                throw new Exception($"INVALID WRAM ADDR 0x{address + 0xC000:X8}");
             }
 
             return _ram.wram[address];
         }
 
-        public static void WRamWrite(UInt16 address, byte value)
+        public void WRamWrite(UInt16 address, byte value)
         {
             address -= 0xC000;
             _ram.wram[address] = value;
         }
 
-        public static byte HRamRead(UInt16 address)
+        public byte HRamRead(UInt16 address)
         {
             address -= 0xFF80;
             return _ram.hram[address];
         }
 
-        public static void HRamWrite(UInt16 address, byte value)
+        public void HRamWrite(UInt16 address, byte value)
         {
             address -= 0xFF80;
             _ram.hram[address] = value;

@@ -1,16 +1,32 @@
 ﻿using GameBoyEmulator.HardwareComponents.Cartridge;
 using GameBoyEmulator.HardwareComponents.CPU;
+using GameBoyEmulator.HardwareComponents.DMA;
+using GameBoyEmulator.HardwareComponents.IO;
+using GameBoyEmulator.HardwareComponents.PPU;
 using GameBoyEmulator.HardwareComponents.RamMemory;
-using System;
 
 namespace GameBoyEmulator.HardwareComponents.DataBus
 {
-    static class Bus
+    public class Bus : IBus
     {
-        private static ICartridge _cartridge;
+        private ICartridge _cartridge;
+        private IRam _ram;
+        private ICpu _cpu;
+        private IIO _io;
+        private IDma _dma;
+        private IPpu _ppu;
 
+        public Bus(IRam ram)
+        {
+            _ram = ram;
+        }
 
-        public static void SetCartridge(ICartridge cartridge)
+        public void AttachCpu(ICpu cpu)
+        {
+            _cpu = cpu;
+        }
+
+        public void InsertCartridge(ICartridge cartridge)
         {
             _cartridge = cartridge;
         }
@@ -29,65 +45,69 @@ namespace GameBoyEmulator.HardwareComponents.DataBus
         // 0xFF00 - 0xFF7F : I/O Registers
         // 0xFF80 - 0xFFFE : Zero Page
 
-        public static byte Read(ushort address)
+        public byte Read(ushort address)
         {
             if (address < 0x8000)
             {
                 return _cartridge.Read(address);
             }
-            else if (address< 0xA000) {
+            else if (address < 0xA000)
+            {
                 //Char/Map Data
-                //TODO
-                throw new Exception($"Address {address} not implemented.");
-            } else if (address< 0xC000) {
+                return _ppu.VRamRead(address);
+            }
+            else if (address < 0xC000)
+            {
                 //Cartridge RAM
                 return _cartridge.Read(address);
-            } else if (address < 0xE000) {
-                //WRAM (Working RAM)
-                return Ram.WRamRead(address);
-                
             }
-            else if (address < 0xFE00) {
+            else if (address < 0xE000)
+            {
+                //WRAM (Working RAM)
+                return _ram.WRamRead(address);
+            }
+            else if (address < 0xFE00)
+            {
                 //reserved echo ram...
                 return 0;
             }
-            else if (address < 0xFEA0) {
+            else if (address < 0xFEA0)
+            {
                 //OAM
-                //TODO
-                throw new Exception($"Address {address} not implemented.");
+                if (_dma.IsTrasfering())
+                {
+                    return 0xFF;
+                }
+
+                _ppu.OamRead(address);
             }
             else if (address < 0xFF00)
             {
-                //reserved unusable...
+                //reserved unusable
                 return 0;
             }
             else if (address < 0xFF80)
             {
-                //IO Registers...
-                //TODO
-                throw new Exception($"Address {address} not implemented.");
+                //IO Registers
+                return _io.Read(address);
             }
             else if (address == 0xFFFF)
             {
-                //CPU ENABLE REGISTER...
-                //TODO
-
-                return Cpu.GetIeRegister();
+                //CPU ENABLE REGISTER
+                return _cpu.GetIeRegister();
             }
 
-            return Ram.HRamRead(address);
+            return _ram.HRamRead(address);
         }
 
-        public static ushort Read16(ushort address)
+        public ushort Read16(ushort address)
         {
             var lo = Read(address);
-            var hi = Read((ushort)(address+1));
+            var hi = Read((ushort)(address + 1));
             return (ushort)(lo | (hi << 8));
         }
 
-        
-
-        public static void Write(ushort address, byte value)
+        public void Write(ushort address, byte value)
         {
             if (address < 0x8000)
             {
@@ -98,8 +118,7 @@ namespace GameBoyEmulator.HardwareComponents.DataBus
             else if (address < 0xA000)
             {
                 //Char/Map Data
-                //TODO
-                throw new Exception($"Address {address} not implemented.");
+                _ppu.VRamWrite(address, value);
             }
             else if (address < 0xC000)
             {
@@ -109,7 +128,7 @@ namespace GameBoyEmulator.HardwareComponents.DataBus
             else if (address < 0xE000)
             {
                 //WRAM
-                Ram.WRamWrite(address, value);
+                _ram.WRamWrite(address, value);
             }
             else if (address < 0xFE00)
             {
@@ -118,9 +137,13 @@ namespace GameBoyEmulator.HardwareComponents.DataBus
             else if (address < 0xFEA0)
             {
                 //OAM
+                if (_dma.IsTrasfering())
+                {
+                    return;
+                }
 
-                //TODO
-                throw new Exception($"Address {address} not implemented.");
+                _ppu.OamWrite(address, value);
+                
             }
             else if (address < 0xFF00)
             {
@@ -128,23 +151,21 @@ namespace GameBoyEmulator.HardwareComponents.DataBus
             }
             else if (address < 0xFF80)
             {
-                //IO Registers...
-                //TODO
-                throw new Exception($"Address {address} not implemented.");
-                //NO_IMPL
+                //IO Registers
+                _io.Write(address, value);
             }
             else if (address == 0xFFFF)
             {
                 //CPU SET ENABLE REGISTER
-                Cpu.SetIeRegister(value);
+                _cpu.SetIeRegister(value);
             }
             else
             {
-                Ram.HRamWrite(address, value);
+                _ram.HRamWrite(address, value);
             }
         }
 
-        public static void Write16(ushort address, ushort value)
+        public void Write16(ushort address, ushort value)
         {
             Write((ushort)(address + 1), (byte)((value >> 8) & 0xFF));
             Write(address, (byte)(value & 0xFF));

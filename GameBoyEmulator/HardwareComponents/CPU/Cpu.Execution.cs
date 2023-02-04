@@ -1,42 +1,46 @@
 ﻿using GameBoyEmulator.Emulator;
-using GameBoyEmulator.HardwareComponents.CPU.Instructions;
 using GameBoyEmulator.HardwareComponents.CPU.Processor;
-using GameBoyEmulator.HardwareComponents.DataBus;
+using GameBoyEmulator.Util.Debuger;
+using GameBoyEmulator.Util.Extensions;
+using Serilog;
 using System;
 
 namespace GameBoyEmulator.HardwareComponents.CPU
 {
-    public static partial class Cpu
+    public partial class Cpu
     {
-        public static bool CpuStep()
+        public bool Step()
         {
             if (!ctx.Halted)
             {
                 UInt16 pc = ctx.Registers.PC;
 
                 FetchInstruction();
-                GbEmulator.cicles(1);
+                if (ctx.CurrentInstruction == null) throw new Exception("Instrução nula");
+
+                GbEmulator.Cicles(1);
                 FetchData();
+#if DEBUG
+                var flags = $"{(Convert.ToBoolean(ctx.Registers.F & (1 << 7)) ? "Z" : "-")}" +
+                            $"{(Convert.ToBoolean(ctx.Registers.F & (1 << 6)) ? "N" : "-")}" +
+                            $"{(Convert.ToBoolean(ctx.Registers.F & (1 << 5)) ? "H" : "-")}" +
+                            $"{(Convert.ToBoolean(ctx.Registers.F & (1 << 4)) ? "C" : "-")}";
 
+                var msg = $"{GbEmulator.Context.ticks:X8} - 0x{pc:X4}: {ctx.CurrentInstruction} \t" +
+                    $"(0x{ctx.CurrentOpcode:X2} 0x{_bus.Read((ushort)(pc + 1)):X2} 0x{_bus.Read((ushort)(pc + 2)):X2}) \t" +
+                    $"A: 0x{ctx.Registers.A:X2} F: {flags} " +
+                    $"BC: 0x{ctx.Registers.B:X2}{ctx.Registers.C:X2} DE: 0x{ctx.Registers.D:X2}{ctx.Registers.E:X2} HL: 0x{ctx.Registers.H:X2}{ctx.Registers.L:X2}";
 
-                var msg = string.Format("0x{0:X4}: {1} \t(0x{2:X4} 0x{3:X4} 0x{4:X4}) \tA: 0x{5:X4} B: 0x{6:X4} C: 0x{7:X4}",
-                    pc,
-                    InstructionList.GetInstructionName(ctx.CurrentInstruction.Type),
-                    ctx.CurrentOpcode,
-                    Bus.Read((ushort)(pc + 1)),
-                    Bus.Read((ushort)(pc + 2)),
-                    ctx.Registers.A,
-                    ctx.Registers.B,
-                    ctx.Registers.C);
-
-                Console.WriteLine(msg);
-
+                Log.Debug(msg);
+                CpuDebugger.Update();
+                CpuDebugger.Print();
+#endif
                 Execute();
             }
             else
             {
-                GbEmulator.cicles(1);
-                if (Convert.ToBoolean(ctx.InterruptionFlags))
+                GbEmulator.Cicles(1);
+                if (ctx.InterruptionFlags.ToBool())
                 {
                     ctx.Halted = false;
                 }
@@ -56,16 +60,17 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             return true;
         }
 
-        private static void Execute()
+        private void Execute()
         {
-            var processor = ProcessorsList.GetInstructionProcessor(ctx.CurrentInstruction.Type);
+            var processor = ProcessorsList.GetInstructionProcessor(ctx.CurrentInstruction);
 
             if (processor == null)
             {
-                Console.WriteLine($"Instrução {Enum.GetName(typeof(InstructionType), ctx.CurrentInstruction.Type)} não implementada");
+                Console.WriteLine($"Instrução não implementada");
+                return;
             }
 
-            processor(ctx);
+            processor();
         }
     }
 }

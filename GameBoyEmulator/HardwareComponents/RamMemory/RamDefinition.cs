@@ -10,5 +10,12 @@ namespace GameBoyEmulator.HardwareComponents.RamMemory
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x80)]
         public byte[] hram;
+
+
+        public void Init()
+        {
+            wram = new byte[0x2000];
+            hram = new byte[0x2000];
+        }
     }
 }

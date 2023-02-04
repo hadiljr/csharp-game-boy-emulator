@@ -20,8 +20,8 @@ namespace GameBoyEmulator.Emulator.Core.Debug
             msg.Clear();
             msg.AppendLine($"Cartridge File name: {file}");
             msg.AppendLine("\n== Cartridge Loaded ==\n");
-            msg.AppendLine(cartridgeModel.RomHeader.ToString());
-            msg.AppendLine($"Checksum: \t{cartridgeModel.RomHeader.Checksum} - {cartridgeModel.Data.ChecksumResult()}");
+            msg.AppendLine(state.RomHeader.ToString());
+            msg.AppendLine($"Checksum: \t{state.RomHeader.Checksum} - {state.Data.ChecksumResult()}");
         }
     }
 }

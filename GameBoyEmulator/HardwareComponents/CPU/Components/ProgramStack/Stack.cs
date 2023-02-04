@@ -1,20 +1,28 @@
 ﻿using GameBoyEmulator.HardwareComponents.CPU;
 using GameBoyEmulator.HardwareComponents.DataBus;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GameBoyEmulator.HardwareComponents.ProgramStack
 {
-    public static class Stack
+    public  class Stack :IStack
     {
-        public static void Push(byte data)
+
+        private readonly IBus _bus;
+        private readonly ICpu _cpu;
+
+        public Stack(IBus bus, ICpu cpu)
         {
-            Cpu.State.Registers.SP--;
-            Bus.Write(Cpu.State.Registers.SP, data);
+            _bus = bus;
+            _cpu = cpu;
         }
 
-        public static void Push16(UInt16 data)
+        public  void Push(byte data)
+        {
+            _cpu.State.Registers.SP--;
+            _bus.Write(_cpu.State.Registers.SP, data);
+        }
+
+        public  void Push16(UInt16 data)
         {
             var first = (byte)((data >> 8) & 0xFF);
             var second = (byte)(data& 0xFF);
@@ -22,12 +30,12 @@ namespace GameBoyEmulator.HardwareComponents.ProgramStack
             Push(second);
         }
 
-        public static byte Pop()
+        public  byte Pop()
         {
-            return Bus.Read(Cpu.State.Registers.SP++);
+            return _bus.Read(_cpu.State.Registers.SP++);
         }
 
-        public static UInt16 Pop16()
+        public  UInt16 Pop16()
         {
             ushort lo = Pop();
             ushort hi = Pop();

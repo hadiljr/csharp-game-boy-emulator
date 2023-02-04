@@ -1,25 +1,22 @@
 ﻿using GameBoyEmulator.HardwareComponents.CPU.Instructions;
-using GameBoyEmulator.HardwareComponents.DataBus;
 using GameBoyEmulator.Util.Bit;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GameBoyEmulator.HardwareComponents.CPU
 {
-    public static partial class Cpu
+    public partial class Cpu
     {
-        public static byte GetIeRegister()
+        public byte GetIeRegister()
         {
             return ctx.IeRegister;
         }
 
-        public static void SetIeRegister(byte value)
+        public void SetIeRegister(byte value)
         {
             ctx.IeRegister = value;
         }
 
-        public static UInt16 ReadRegister(RegisterType registerType)
+        public UInt16 ReadRegister(RegisterType registerType)
         {
             switch (registerType)
             {
@@ -43,7 +40,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             }
         }
 
-        public static byte ReadRegister8bits(RegisterType registerType)
+        public byte ReadRegister8bits(RegisterType registerType)
         {
             switch (registerType)
             {
@@ -57,7 +54,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
                 case RegisterType.RT_L: return ctx.Registers.L;
 
                 case RegisterType.RT_HL:
-                    return Bus.Read(ReadRegister(RegisterType.RT_HL));
+                    return _bus.Read(ReadRegister(RegisterType.RT_HL));
 
                 default:
                     throw new Exception("Invalid register 8 bit");
@@ -65,7 +62,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             }
         }
 
-        public static void SetRegister(RegisterType registerType, UInt16 value)
+        public void SetRegister(RegisterType registerType, UInt16 value)
         {
             switch (registerType)
             {
@@ -125,7 +122,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             }
         }
 
-        public static void SetRegister8bits(RegisterType registerType, byte value)
+        public void SetRegister8bits(RegisterType registerType, byte value)
         {
             switch (registerType)
             {
@@ -151,7 +148,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
                     ctx.Registers.L = (byte)(value & 0xFF);
                     break;
                 case RegisterType.RT_HL:
-                    Bus.Write(ReadRegister(RegisterType.RT_HL), value);
+                    _bus.Write(ReadRegister(RegisterType.RT_HL), value);
                     break;
 
                 default:

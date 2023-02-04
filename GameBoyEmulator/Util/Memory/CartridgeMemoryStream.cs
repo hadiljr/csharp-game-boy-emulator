@@ -2,11 +2,10 @@
 using GameBoyEmulator.Util.Extensions;
 using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace GameBoyEmulator.Util.Memory
 {
-    internal sealed class CartridgeMemoryStream:MemoryStream
+    public sealed class CartridgeMemoryStream:MemoryStream
     {
         public RomHeader GetRomHeader()
         {

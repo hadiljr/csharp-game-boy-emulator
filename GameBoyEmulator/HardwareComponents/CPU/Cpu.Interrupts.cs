@@ -1,27 +1,25 @@
 ﻿using GameBoyEmulator.HardwareComponents.Interruptions;
-using GameBoyEmulator.HardwareComponents.ProgramStack;
 using System;
 
 namespace GameBoyEmulator.HardwareComponents.CPU
 {
-    public static partial class Cpu
+    public partial class Cpu
     {
-        internal static void HandleInterrupts()
+        internal void HandleInterrupts()
         {
             var IntAndAddress = GetInterruptTypeAndAddress(ctx);
-
-
             HandleInterrupst(IntAndAddress.Item2, IntAndAddress.Item1);
             //_context.EnableIME = false;
         }
-        internal static void RequestInterrupts(InterruptType interruptType)
-        {
 
+        public void RequestInterrupts(InterruptType interruptType)
+        {
+            ctx.InterruptionFlags = (byte)(ctx.InterruptionFlags | (int)interruptType);
         }
 
-        private static void HandleInterrupst(UInt16 address, InterruptType interruptType)
+        private void HandleInterrupst(UInt16 address, InterruptType interruptType)
         {
-            Stack.Push16(ctx.Registers.PC);
+            _stack.Push16(ctx.Registers.PC);
             ctx.Registers.PC = address;
 
             ctx.InterruptionFlags &= (byte)interruptType;
@@ -29,7 +27,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             ctx.InterruptionMasterEnabled = false;
         }
 
-        private static Tuple<InterruptType, byte> GetInterruptTypeAndAddress(CpuState ctx)
+        private Tuple<InterruptType, byte> GetInterruptTypeAndAddress(CpuState ctx)
         {
             if (InterruptionCheck(ctx, InterruptType.IT_VBLANK))
             {
@@ -55,7 +53,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             throw new NotImplementedException("Interruption Not implemented");
         }
 
-        private static bool InterruptionCheck(CpuState ctx, InterruptType interruptType)
+        private bool InterruptionCheck(CpuState ctx, InterruptType interruptType)
         {
             return (Convert.ToBoolean(ctx.InterruptionFlags & (int)interruptType) &&
                 Convert.ToBoolean(ctx.InterruptionFlags & (int)interruptType));

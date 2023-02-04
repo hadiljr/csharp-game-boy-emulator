@@ -1,4 +1,8 @@
-﻿namespace GameBoyEmulator.HardwareComponents.CPU.Instructions
+﻿using GameBoyEmulator.HardwareComponents.DataBus;
+using GameBoyEmulator.Util.Extensions;
+using System;
+
+namespace GameBoyEmulator.HardwareComponents.CPU.Instructions
 {
     public class Instruction
     {
@@ -18,5 +22,6 @@
             Condition = condition;
             Parameter = parameter;
         }
+
     }
 }

@@ -1,34 +1,43 @@
 ﻿using GameBoyEmulator.Util.Memory;
-using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace GameBoyEmulator.HardwareComponents.Cartridge
 {
-    abstract class CartridgeBase : ICartridge
+    public abstract class CartridgeBase : ICartridge
     {
-        protected readonly CartridgeModel cartridgeModel = new CartridgeModel();
+        protected readonly CartridgeState state = new CartridgeState();
+        protected string _filePath;
 
-        public virtual void LoadCartridge(string file)
+        public string FilePath { get { return _filePath; } }
+        public CartridgeState State { get { return state; } }
+
+        public CartridgeBase(string filePath)
         {
-            cartridgeModel.Data = new CartridgeMemoryStream();
-            File.OpenRead(Path.GetFullPath(file)).CopyTo(cartridgeModel.Data);
+            _filePath = filePath;
+            LoadCartridge();
+        }
 
-            cartridgeModel.RomSize = cartridgeModel.Data.GetRomSize();
+        private void LoadCartridge()
+        {
 
-            var header = cartridgeModel.Data.GetRomHeader();
+            state.Data = new CartridgeMemoryStream();
+            File.OpenRead(Path.GetFullPath(_filePath)).CopyTo(state.Data);
 
-            cartridgeModel.RomHeader = header;
+            state.RomSize = state.Data.GetRomSize();
+
+            var header = state.Data.GetRomHeader();
+
+            state.RomHeader = header;
         }
 
         public byte Read(ushort address)
         {    
-            return cartridgeModel.Data.ReadAdress(address); 
+            return state.Data.ReadAdress(address); 
         }
 
         public void Write(ushort adress, byte value)
         {
-            throw new NotImplementedException();
+           // throw new NotImplementedException();
         }
     }
 }

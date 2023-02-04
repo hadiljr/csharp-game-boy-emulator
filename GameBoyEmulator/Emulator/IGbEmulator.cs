@@ -4,7 +4,6 @@ namespace GameBoyEmulator.Emulator
 {
     public interface IGbEmulator
     {
-        Context Context { get; }
 
         void Run();
     }

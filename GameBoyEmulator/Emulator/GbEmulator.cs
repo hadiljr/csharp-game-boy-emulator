@@ -7,83 +7,87 @@ using GameBoyEmulator.HardwareComponents.PPU;
 using GameBoyEmulator.HardwareComponents.Timer;
 using System;
 using System.Threading.Tasks;
+using GameBoyEmulator.HardwareComponents.RamMemory;
 
 namespace GameBoyEmulator.Emulator
 {
     public class GbEmulator : IGbEmulator
     {
-        private Context _context = new Context();
+        private static Context _context = new Context();
 
-        private IPpu _ppu;
-        private ITimer _timer;
-        
         private DebugCartridge _cartridge;
         private string _cartridgeFile;
 
         public GbEmulator(string cartridgeFile, RunType runMode)
         {
             _context.RunMode = runMode;
+            _context.Running = true;
+            _context.Paused = false;
+            _context.ticks = 0;
+
             _cartridgeFile = cartridgeFile;
+
+            Ram.Init();
         }
 
         public void Run()
         {
-            try
-            {
+           
                 _context.Running = true;
                 if (_context.RunMode.Equals(RunType.DEBUG))
                 {
                     RunDebugMode();
                 }
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+           
         }
 
         private void RunDebugMode()
         {
-            try
-            {
+           
                 _cartridge = new DebugCartridge();
                 _cartridge.LoadCartridge(_cartridgeFile);
                 Console.WriteLine(_cartridge.DebugMessage());
-                
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
 
-            Bus.SetCartridge(_cartridge);
-            Cpu.CpuInit();
 
-            Console.WriteLine("== Instructions ==");
-            while (_context.Running)
-            {
-                if (_context.Paused)
+
+                Bus.SetCartridge(_cartridge);
+                Timer.Init();
+                Cpu.CpuInit();
+
+
+                Console.WriteLine("== Instructions ==");
+                while (_context.Running)
                 {
-                    continue;
+                    if (_context.Paused)
+                    {
+                        continue;
+                    }
+
+                    if (!Cpu.CpuStep())
+                    {
+                        throw new Exception("CPU parou");
+                    }
+
+                    _context.ticks++;
+
                 }
 
-                if (!Cpu.CpuStep())
-                {
-                    throw new Exception("CPU parou");
-                }
+                Console.Read();
 
-                _context.ticks++;
-
-            }
-
-            Console.Read();
+            
         }
 
-        public static void cicles(int number)
+        public static void Cicles(int cicle)
         {
             //throw new NotImplementedException();
+            var cicling = cicle * 4;
+            for (int i = 0; i < cicling; i++)
+            {
+                _context.ticks++;
+                Timer.Tick();
+            }
         }
 
-        public Context Context => _context;
+        public static Context Context => _context;
     }
 }

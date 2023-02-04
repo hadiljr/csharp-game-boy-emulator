@@ -340,9 +340,12 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Instructions
             return instruction;
         }
 
-        public static string GetInstructionName(InstructionType type)
+        public static string GetInstructionName(Instruction instruction)
         {
-            return _instructionsNames[(byte)type];
+            if(instruction!=null)
+            return _instructionsNames[(byte)instruction.Type];
+
+            return "Uknown";
         }
     }
 }

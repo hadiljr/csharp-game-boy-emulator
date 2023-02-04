@@ -1,55 +1,73 @@
 ﻿using GameBoyEmulator.HardwareComponents.CPU.Instructions;
+using GameBoyEmulator.HardwareComponents.DataBus;
 using System;
 using System.Collections.Generic;
 
 namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 {
-    public static class ProcessorsList
+    public class ProcessorsList
     {
-        private static readonly Dictionary<InstructionType, Action<CpuState>> processors = new Dictionary<InstructionType, Action<CpuState>>
+        private readonly Processors _proc;
+        private Dictionary<InstructionType, Action> processors;
+
+        public ProcessorsList(ICpu cpu, IBus bus)
         {
-            {InstructionType.IN_NONE,Processors.ProcessIN_NONE},
-            {InstructionType.IN_NOP,Processors.ProcessIN_NOP},
-            {InstructionType.IN_LD,Processors.ProcessIN_LD},
-            {InstructionType.IN_LDH,Processors.ProcessIN_LDH},
-            {InstructionType.IN_JP,Processors.ProcessIN_JP},
-            {InstructionType.IN_DI,Processors.ProcessIN_DI},
-            {InstructionType.IN_POP,Processors.ProcessIN_POP},
-            {InstructionType.IN_PUSH,Processors.ProcessIN_PUSH},
-            {InstructionType.IN_JR,Processors.ProcessIN_JR},
-            {InstructionType.IN_CALL,Processors.ProcessIN_CALL},
-            {InstructionType.IN_RET,Processors.ProcessIN_RET},
-            {InstructionType.IN_RST,Processors.ProcessIN_RST},
-            {InstructionType.IN_DEC,Processors.ProcessIN_DEC},
-            {InstructionType.IN_INC,Processors.ProcessIN_INC},
-            {InstructionType.IN_ADD,Processors.ProcessIN_ADD},
-            {InstructionType.IN_ADC,Processors.ProcessIN_ADC},
-            {InstructionType.IN_SUB,Processors.ProcessIN_SUB},
-            {InstructionType.IN_SBC,Processors.ProcessIN_SBC},
-            {InstructionType.IN_AND,Processors.ProcessIN_AND},
-            {InstructionType.IN_XOR,Processors.ProcessIN_XOR},
-            {InstructionType.IN_OR,Processors.ProcessIN_OR},
-            {InstructionType.IN_CP,Processors.ProcessIN_CP},
-            {InstructionType.IN_CB,Processors.ProcessIN_CB},
-            {InstructionType.IN_RRCA,Processors.ProcessIN_RRCA},
-            {InstructionType.IN_RLCA,Processors.ProcessIN_RLCA},
-            {InstructionType.IN_RRA,Processors.ProcessIN_RRA},
-            {InstructionType.IN_RLA,Processors.ProcessIN_RLA},
-            {InstructionType.IN_STOP,Processors.ProcessIN_STOP},
-            {InstructionType.IN_HALT,Processors.ProcessIN_HALT},
-            {InstructionType.IN_DAA,Processors.ProcessIN_DAA},
-            {InstructionType.IN_CPL,Processors.ProcessIN_CPL},
-            {InstructionType.IN_SCF,Processors.ProcessIN_SCF},
-            {InstructionType.IN_CCF,Processors.ProcessIN_CCF},
-            {InstructionType.IN_EI,Processors.ProcessIN_EI},
-            {InstructionType.IN_RETI,Processors.ProcessIN_RETI},
-            
-        };
+            _proc = new Processors(cpu, bus);
+            Init();
+        }
+
+        private void Init()
+        {
+
+            processors = new Dictionary<InstructionType, Action>
+            {
+                {InstructionType.IN_NONE,_proc.ProcessIN_NONE},
+                {InstructionType.IN_NOP,_proc.ProcessIN_NOP},
+                {InstructionType.IN_LD,_proc.ProcessIN_LD},
+                {InstructionType.IN_LDH,_proc.ProcessIN_LDH},
+                {InstructionType.IN_JP,_proc.ProcessIN_JP},
+                {InstructionType.IN_DI,_proc.ProcessIN_DI},
+                {InstructionType.IN_POP,_proc.ProcessIN_POP},
+                {InstructionType.IN_PUSH,_proc.ProcessIN_PUSH},
+                {InstructionType.IN_JR,_proc.ProcessIN_JR},
+                {InstructionType.IN_CALL,_proc.ProcessIN_CALL},
+                {InstructionType.IN_RET,_proc.ProcessIN_RET},
+                {InstructionType.IN_RST,_proc.ProcessIN_RST},
+                {InstructionType.IN_DEC,_proc.ProcessIN_DEC},
+                {InstructionType.IN_INC,_proc.ProcessIN_INC},
+                {InstructionType.IN_ADD,_proc.ProcessIN_ADD},
+                {InstructionType.IN_ADC,_proc.ProcessIN_ADC},
+                {InstructionType.IN_SUB,_proc.ProcessIN_SUB},
+                {InstructionType.IN_SBC,_proc.ProcessIN_SBC},
+                {InstructionType.IN_AND,_proc.ProcessIN_AND},
+                {InstructionType.IN_XOR,_proc.ProcessIN_XOR},
+                {InstructionType.IN_OR,_proc.ProcessIN_OR},
+                {InstructionType.IN_CP,_proc.ProcessIN_CP},
+                {InstructionType.IN_CB,_proc.ProcessIN_CB},
+                {InstructionType.IN_RRCA,_proc.ProcessIN_RRCA},
+                {InstructionType.IN_RLCA,_proc.ProcessIN_RLCA},
+                {InstructionType.IN_RRA,_proc.ProcessIN_RRA},
+                {InstructionType.IN_RLA,_proc.ProcessIN_RLA},
+                {InstructionType.IN_STOP,_proc.ProcessIN_STOP},
+                {InstructionType.IN_HALT,_proc.ProcessIN_HALT},
+                {InstructionType.IN_DAA,_proc.ProcessIN_DAA},
+                {InstructionType.IN_CPL,_proc.ProcessIN_CPL},
+                {InstructionType.IN_SCF,_proc.ProcessIN_SCF},
+                {InstructionType.IN_CCF,_proc.ProcessIN_CCF},
+                {InstructionType.IN_EI,_proc.ProcessIN_EI},
+                {InstructionType.IN_RETI,_proc.ProcessIN_RETI},
+
+            };
+        }
 
 
-        public static Action<CpuState> GetInstructionProcessor(InstructionType instruction)
+        public Action GetInstructionProcessor(Instruction instruction)
         {
-            return processors[instruction];
+            if (instruction != null)
+                return processors[instruction.Type];
+
+            return null;
+
         }
 
     }
