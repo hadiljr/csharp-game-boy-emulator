@@ -17,7 +17,7 @@ namespace GameBoyEmulator.HardwareComponents.Cartridge
             LoadCartridge();
         }
 
-        private void LoadCartridge()
+        protected virtual void LoadCartridge()
         {
 
             state.Data = new CartridgeMemoryStream();

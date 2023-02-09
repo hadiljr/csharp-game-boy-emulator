@@ -64,7 +64,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
                     }
 
                     ctx.FetchedData = _bus.Read(addr);
-                    GbEmulator.Cicles(1);
+                    _board.Cicles(1);
                     return;
 
                 case AdressModeType.AM_R_MR:
@@ -173,7 +173,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
                     return;
 
                 default:
-                    throw new Exception($"Unknown Addressing Mode! Mode: {ctx.CurrentInstruction.Mode} Opcode: {ctx.CurrentOpcode}");
+                    throw new Exception($"Unknown Addressing Mode! Mode: {ctx.CurrentInstruction.Mode} Opcode: {ctx.CurrentOpcode:X2}");
             }
         }
     }

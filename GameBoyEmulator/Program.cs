@@ -30,7 +30,7 @@ namespace GameBoyEmulator
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Console()
+                .WriteTo.Console(outputTemplate:"{Message:lj}{NewLine}")
                 .CreateLogger();
         }
     }

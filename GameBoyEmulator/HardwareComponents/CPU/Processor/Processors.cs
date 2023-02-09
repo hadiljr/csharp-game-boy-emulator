@@ -13,12 +13,13 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
         private readonly ICpu _cpu;
         private readonly IBus _bus;
 
-        private event Action<int> CiclingEvent;
+        
 
         public Processors(ICpu cpu, IBus bus)
         {
             _cpu = cpu;
             _bus = bus;
+            
         }
 
         public void ProcessIN_NONE()
@@ -43,7 +44,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
                 //16 bit register
                 if (_cpu.State.CurrentInstruction.Register2.Value >= RegisterType.RT_AF)
                 {
-                    CiclingEvent(1);
+                    _cpu.CallCicles(1);
                     _bus.Write16(_cpu.State.MemoryDestination, _cpu.State.FetchedData);
 
                 }
@@ -84,7 +85,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
                 _bus.Write(_cpu.State.MemoryDestination, _cpu.State.Registers.A);
             }
 
-            CiclingEvent(1);
+            _cpu.CallCicles(1);
         }
 
         public void ProcessIN_XOR()
@@ -120,19 +121,19 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
         {
             if (_cpu.State.CurrentInstruction.Condition != ConditionType.CT_NONE)
             {
-                CiclingEvent(1);
+                _cpu.CallCicles(1);
             }
 
             if (CheckCondition())
             {
                 UInt16 lo = _cpu.GetStack().Pop();
-                CiclingEvent(1);
+                _cpu.CallCicles(1);
                 UInt16 hi = _cpu.GetStack().Pop();
-                CiclingEvent(1);
+                _cpu.CallCicles(1);
 
                 UInt16 res = (UInt16)((hi << 8) | lo);
                 _cpu.State.Registers.PC = res;
-                CiclingEvent(1);
+                _cpu.CallCicles(1);
             }
         }
 
@@ -145,9 +146,9 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
         public void ProcessIN_POP()
         {
             UInt16 lo = _cpu.GetStack().Pop();
-            CiclingEvent(1);
+            _cpu.CallCicles(1);
             UInt16 hi = _cpu.GetStack().Pop();
-            CiclingEvent(1);
+            _cpu.CallCicles(1);
 
             UInt16 res = (UInt16)((hi << 8) | lo);
 
@@ -164,14 +165,14 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
         {
 
             byte hi = (byte)((_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) >> 8) & 0xFF);
-            CiclingEvent(1);
+            _cpu.CallCicles(1);
             _cpu.GetStack().Push(hi);
 
             byte lo = (byte)(_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) & 0xFF);
-            CiclingEvent(1);
+            _cpu.CallCicles(1);
             _cpu.GetStack().Push(hi);
 
-            CiclingEvent(1);
+            _cpu.CallCicles(1);
         }
 
         public void ProcessIN_INC()
@@ -180,7 +181,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
             if (Is16BitRegisterType(_cpu.State.CurrentInstruction.Register1.Value))
             {
-                CiclingEvent(1);
+                _cpu.CallCicles(1);
             }
 
             if (_cpu.State.CurrentInstruction.Register1.Value == RegisterType.RT_HL &&
@@ -207,7 +208,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
             if (Is16BitRegisterType(_cpu.State.CurrentInstruction.Register1.Value))
             {
-                CiclingEvent(1);
+                _cpu.CallCicles(1);
             }
 
             if (_cpu.State.CurrentInstruction.Register1.Value == RegisterType.RT_HL &&
@@ -270,7 +271,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             UInt16 value = (UInt16)(_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) + _cpu.State.FetchedData);
             bool is16Bit = Is16BitRegisterType(_cpu.State.CurrentInstruction.Register1.Value);
 
-            if (is16Bit) CiclingEvent(1);
+            if (is16Bit) _cpu.CallCicles(1);
 
             if (_cpu.State.CurrentInstruction.Register1.Value == RegisterType.RT_SP)
             {
@@ -308,9 +309,9 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             byte bit_op = (byte)((op >> 6) & 0b11);
             byte registerValue = _cpu.ReadRegister8bits(register);
 
-            CiclingEvent(1);
+            _cpu.CallCicles(1);
 
-            if (register == RegisterType.RT_HL) CiclingEvent(2);
+            if (register == RegisterType.RT_HL) _cpu.CallCicles(2);
 
             switch (bit_op)
             {
@@ -557,12 +558,12 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             {
                 if (pushPC)
                 {
-                    CiclingEvent(2);
+                    _cpu.CallCicles(2);
                     _cpu.GetStack().Push16(_cpu.State.Registers.PC);
                 }
 
                 _cpu.State.Registers.PC = address;
-                CiclingEvent(1);
+                _cpu.CallCicles(1);
             }
         }
 

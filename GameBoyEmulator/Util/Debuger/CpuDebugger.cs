@@ -3,26 +3,32 @@ using System;
 
 namespace GameBoyEmulator.Util.Debuger
 {
-    static class CpuDebugger
+    public class CpuDebugger
     {
-        private static string msg;
+        private string msg;
+        private readonly IBus _bus;
 
-        public static void Update()
+        public CpuDebugger(IBus bus)
         {
-            if (Bus.Read(0xFF02) == 0x81)
+            _bus = bus;
+        }
+
+        public void Update()
+        {
+            if (_bus.Read(0xFF02) == 0x81)
             {
-                char c = (char)Bus.Read(0xFF01);
+                char c = (char)_bus.Read(0xFF01);
                 msg += c;
-                Bus.Write(0xFF02, 0);
+                _bus.Write(0xFF02, 0);
             }
         }
 
-        public static void Print()
+        public void Print()
         {
             if (!string.IsNullOrWhiteSpace(msg))
             {
                 Console.Write(msg);
-               
+
             }
         }
     }

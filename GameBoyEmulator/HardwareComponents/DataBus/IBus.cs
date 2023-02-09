@@ -1,11 +1,12 @@
 ﻿using GameBoyEmulator.HardwareComponents.Cartridge;
 using GameBoyEmulator.HardwareComponents.CPU;
+using GameBoyEmulator.HardwareComponents.Timer;
 
 namespace GameBoyEmulator.HardwareComponents.DataBus
 {
     public interface IBus
     {
-        void AttachCpu(ICpu cpu);
+        void AttachCpu(ICpu cpu, ITimer timer);
 
         byte Read(ushort address);
         ushort Read16(ushort address);

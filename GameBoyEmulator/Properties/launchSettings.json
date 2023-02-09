@@ -2,7 +2,7 @@
   "profiles": {
     "GameBoyEmulator": {
       "commandName": "Project",
-      "commandLineArgs": "..\\..\\..\\..\\.test_roms\\02-interrupts.gb"
+      "commandLineArgs": "..\\..\\..\\..\\.test_roms\\01-special.gb"
     }
   }
 }

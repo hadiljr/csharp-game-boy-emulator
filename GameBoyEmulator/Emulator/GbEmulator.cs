@@ -1,13 +1,6 @@
 ﻿using GameBoyEmulator.Emulator.Core;
 using GameBoyEmulator.Emulator.Core.Debug;
-using GameBoyEmulator.HardwareComponents.DataBus;
-using GameBoyEmulator.HardwareComponents.Cartridge;
-using GameBoyEmulator.HardwareComponents.CPU;
-using GameBoyEmulator.HardwareComponents.PPU;
-using GameBoyEmulator.HardwareComponents.Timer;
-using System;
-using System.Threading.Tasks;
-using GameBoyEmulator.HardwareComponents.RamMemory;
+using GameBoyEmulator.HardwareComponents;
 
 namespace GameBoyEmulator.Emulator
 {
@@ -16,6 +9,7 @@ namespace GameBoyEmulator.Emulator
         private static Context _context = new Context();
 
         private DebugCartridge _cartridge;
+        private Board _board;
         private string _cartridgeFile;
 
         public GbEmulator(string cartridgeFile, RunType runMode)
@@ -27,67 +21,30 @@ namespace GameBoyEmulator.Emulator
 
             _cartridgeFile = cartridgeFile;
 
-            Ram.Init();
+
         }
 
         public void Run()
         {
-           
-                _context.Running = true;
-                if (_context.RunMode.Equals(RunType.DEBUG))
-                {
-                    RunDebugMode();
-                }
-           
+
+            _context.Running = true;
+            _board = new Board();
+            _cartridge = new DebugCartridge(_cartridgeFile);
+            _board.Run(_cartridge);
+
         }
 
-        private void RunDebugMode()
-        {
-           
-                _cartridge = new DebugCartridge();
-                _cartridge.LoadCartridge(_cartridgeFile);
-                Console.WriteLine(_cartridge.DebugMessage());
+        //public static void Cicles(int cicle)
+        //{
+        //    //throw new NotImplementedException();
+        //    var cicling = cicle * 4;
+        //    for (int i = 0; i < cicling; i++)
+        //    {
+        //        _context.ticks++;
+        //        Timer.Tick();
+        //    }
+        //}
 
-
-
-                Bus.SetCartridge(_cartridge);
-                Timer.Init();
-                Cpu.CpuInit();
-
-
-                Console.WriteLine("== Instructions ==");
-                while (_context.Running)
-                {
-                    if (_context.Paused)
-                    {
-                        continue;
-                    }
-
-                    if (!Cpu.CpuStep())
-                    {
-                        throw new Exception("CPU parou");
-                    }
-
-                    _context.ticks++;
-
-                }
-
-                Console.Read();
-
-            
-        }
-
-        public static void Cicles(int cicle)
-        {
-            //throw new NotImplementedException();
-            var cicling = cicle * 4;
-            for (int i = 0; i < cicling; i++)
-            {
-                _context.ticks++;
-                Timer.Tick();
-            }
-        }
-
-        public static Context Context => _context;
+        //public static Context Context => _context;
     }
 }

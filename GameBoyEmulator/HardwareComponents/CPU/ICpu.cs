@@ -30,5 +30,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
 
         void RequestInterrupts(InterruptType interruptType);
 
+        void CallCicles(int number);
+
     }
 }

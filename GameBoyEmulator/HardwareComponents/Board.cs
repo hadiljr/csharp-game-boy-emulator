@@ -9,7 +9,7 @@ using System;
 
 namespace GameBoyEmulator.HardwareComponents
 {
-    public class Board
+    public class Board:IBoard
     {
 
         private readonly IRam ram = new Ram();
@@ -21,13 +21,14 @@ namespace GameBoyEmulator.HardwareComponents
         public bool Running { get; set; }
         public bool Paused { get; set; }
 
-        private ulong ticks;
+        public ulong ticks;
 
         public Board()
         {
             bus = new Bus(ram);
-            cpu = new Cpu(bus, timer);
-            cpu.CiclingEvent += Cicle;
+            cpu = new Cpu(this,bus, timer);
+
+            cpu.CiclingEvent += Cicles;
         }
 
         public void Run(CartridgeBase cartridge)
@@ -59,7 +60,7 @@ namespace GameBoyEmulator.HardwareComponents
 
         }
 
-        public void Cicle(int cicles)
+        public void Cicles(int cicles)
         {
             cicles *= 4;
 

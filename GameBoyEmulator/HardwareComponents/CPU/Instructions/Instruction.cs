@@ -10,10 +10,10 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Instructions
         public AdressModeType? Mode { get; set; }
         public RegisterType? Register1 { get; set; }
         public RegisterType? Register2 { get; set; }
-        public ConditionType? Condition { get; set; }
+        public ConditionType Condition { get; set; }
         public byte? Parameter { get; set; }
 
-        public Instruction(InstructionType type, AdressModeType? mode = null, RegisterType? register1 = null, RegisterType? register2 = null, ConditionType? condition = null,byte? parameter=null)
+        public Instruction(InstructionType type, AdressModeType? mode = null, RegisterType? register1 = null, RegisterType? register2 = null, ConditionType condition = ConditionType.CT_NONE,byte? parameter=null)
         {
             Type = type;
             Mode = mode;

@@ -1,6 +1,8 @@
-﻿using GameBoyEmulator.HardwareComponents.DataBus;
+﻿using GameBoyEmulator.HardwareComponents.CPU.Processor;
+using GameBoyEmulator.HardwareComponents.DataBus;
 using GameBoyEmulator.HardwareComponents.ProgramStack;
 using GameBoyEmulator.HardwareComponents.Timer;
+using GameBoyEmulator.Util.Debuger;
 using System;
 
 namespace GameBoyEmulator.HardwareComponents.CPU
@@ -14,15 +16,26 @@ namespace GameBoyEmulator.HardwareComponents.CPU
         private readonly IBus _bus;
         private readonly ITimer _timer;
         private readonly IStack _stack;
-        public Cpu(IBus bus, ITimer timer)
+        private readonly Board _board;
+        private readonly CpuDebugger _cpuDebugger;
+
+        private readonly ProcessorsList _processorsList;
+
+        public Cpu(Board board, IBus bus, ITimer timer)
         {
+            _board = board;
             _bus = bus;
-            _bus.AttachCpu(this);
+            _bus.AttachCpu(this, timer);
 
             _timer = timer;
             _timer.Init(this);
 
             _stack = new Stack(_bus, this);
+
+            _processorsList = new ProcessorsList(this, _bus);
+            _cpuDebugger = new CpuDebugger(_bus);
+
+
             CpuInit();
         }
 

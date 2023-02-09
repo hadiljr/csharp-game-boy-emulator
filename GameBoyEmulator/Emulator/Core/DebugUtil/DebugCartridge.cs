@@ -9,19 +9,26 @@ namespace GameBoyEmulator.Emulator.Core.Debug
 
         private StringBuilder msg = new StringBuilder();
 
+        public DebugCartridge(string filePath):base(filePath)
+        {
+
+        }
+
         public string DebugMessage()
         {
             return msg.ToString();
         }
 
-        public override void LoadCartridge(string file)
+        protected override void LoadCartridge()
         {
-            base.LoadCartridge(file);
+            base.LoadCartridge();
             msg.Clear();
-            msg.AppendLine($"Cartridge File name: {file}");
+            msg.AppendLine($"Cartridge File name: {_filePath}");
             msg.AppendLine("\n== Cartridge Loaded ==\n");
             msg.AppendLine(state.RomHeader.ToString());
             msg.AppendLine($"Checksum: \t{state.RomHeader.Checksum} - {state.Data.ChecksumResult()}");
         }
+
+       
     }
 }

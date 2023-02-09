@@ -4,6 +4,7 @@ using GameBoyEmulator.HardwareComponents.DMA;
 using GameBoyEmulator.HardwareComponents.IO;
 using GameBoyEmulator.HardwareComponents.PPU;
 using GameBoyEmulator.HardwareComponents.RamMemory;
+using GameBoyEmulator.HardwareComponents.Timer;
 
 namespace GameBoyEmulator.HardwareComponents.DataBus
 {
@@ -19,12 +20,16 @@ namespace GameBoyEmulator.HardwareComponents.DataBus
         public Bus(IRam ram)
         {
             _ram = ram;
+           
         }
 
-        public void AttachCpu(ICpu cpu)
+        public void AttachCpu(ICpu cpu,ITimer timer)
         {
             _cpu = cpu;
+            _io = new IO.IO(_cpu, timer);
         }
+
+        
 
         public void InsertCartridge(ICartridge cartridge)
         {
