@@ -25,7 +25,7 @@ namespace GameBoyEmulator.HardwareComponents.ProgramStack
         public  void Push16(UInt16 data)
         {
             var first = (byte)((data >> 8) & 0xFF);
-            var second = (byte)(data& 0xFF);
+            var second = (byte)(data & 0xFF);
             Push(first);
             Push(second);
         }

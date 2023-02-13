@@ -1,6 +1,7 @@
 ﻿using GameBoyEmulator.Emulator;
 using GameBoyEmulator.HardwareComponents.CPU.Instructions;
 using GameBoyEmulator.HardwareComponents.DataBus;
+using Serilog;
 using System;
 
 namespace GameBoyEmulator.HardwareComponents.CPU
@@ -57,18 +58,21 @@ namespace GameBoyEmulator.HardwareComponents.CPU
                     return;
 
                 case AdressModeType.AM_MR_R:
-                    var addr = ReadRegister(ctx.CurrentInstruction.Register2.Value);
-                    if (ctx.CurrentInstruction.Register2 == RegisterType.RT_C)
-                    {
-                        addr |= 0xFF00;
-                    }
+                    ctx.FetchedData = ReadRegister(ctx.CurrentInstruction.Register2.Value);
+                    ctx.MemoryDestination = ReadRegister(ctx.CurrentInstruction.Register1.Value);
+                    ctx.DestinationIsMemory = true;
 
-                    ctx.FetchedData = _bus.Read(addr);
-                    _board.Cicles(1);
+                    if (ctx.CurrentInstruction.Register1 == RegisterType.RT_C)
+                    {
+                        ctx.MemoryDestination |= 0xFF00;
+                    }
+                    //Log.Information($"MR_R Address: {addr}");
+                    //ctx.FetchedData = _bus.Read(addr);
+                    //_board.Cicles(1);
                     return;
 
                 case AdressModeType.AM_R_MR:
-                    addr = ReadRegister(ctx.CurrentInstruction.Register2.Value);
+                    var addr = ReadRegister(ctx.CurrentInstruction.Register2.Value);
 
                     if (ctx.CurrentInstruction.Register2.Value == RegisterType.RT_C)
                     {

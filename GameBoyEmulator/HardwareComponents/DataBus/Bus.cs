@@ -20,13 +20,16 @@ namespace GameBoyEmulator.HardwareComponents.DataBus
         public Bus(IRam ram)
         {
             _ram = ram;
-           
+            _ppu = new Ppu();
+            _dma = new Dma(this, _ppu);
         }
+
+        public IDma Dma => _dma;
 
         public void AttachCpu(ICpu cpu,ITimer timer)
         {
             _cpu = cpu;
-            _io = new IO.IO(_cpu, timer);
+            _io = new IO.IO(_cpu, timer,_dma);
         }
 
         

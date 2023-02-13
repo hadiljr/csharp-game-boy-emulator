@@ -1,6 +1,8 @@
 ﻿using GameBoyEmulator.HardwareComponents.Cartridge;
 using GameBoyEmulator.HardwareComponents.CPU;
 using GameBoyEmulator.HardwareComponents.DataBus;
+using GameBoyEmulator.HardwareComponents.DMA;
+using GameBoyEmulator.HardwareComponents.PPU;
 using GameBoyEmulator.HardwareComponents.RamMemory;
 using GameBoyEmulator.HardwareComponents.Timer;
 using GameBoyEmulator.Util.Extensions;
@@ -16,6 +18,7 @@ namespace GameBoyEmulator.HardwareComponents
         private readonly ITimer timer = new Timer.Timer();
 
         private readonly IBus bus;
+        
         private readonly ICpu cpu;
 
         public bool Running { get; set; }
@@ -25,6 +28,7 @@ namespace GameBoyEmulator.HardwareComponents
 
         public Board()
         {
+           
             bus = new Bus(ram);
             cpu = new Cpu(this,bus, timer);
 
@@ -62,25 +66,21 @@ namespace GameBoyEmulator.HardwareComponents
 
         public void Cicles(int cicles)
         {
-            cicles *= 4;
+            
 
             for (int i = 0; i < cicles; i++)
             {
-               ticks++;
-                timer.Tick();
+                for(int n = 0; n < 4; n++)
+                {
+                    ticks++;
+                    timer.Tick();
+                }
+
+                bus.Dma.Tick();
             }
         }
 
-        //public static void Cicles(int cicle)
-        //{
-        //    //throw new NotImplementedException();
-        //    var cicling = cicle * 4;
-        //    for (int i = 0; i < cicling; i++)
-        //    {
-        //        _context.ticks++;
-        //        timer.Tick();
-        //    }
-        //}
+        
 
     }
 }

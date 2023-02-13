@@ -1,11 +1,13 @@
 ﻿using GameBoyEmulator.HardwareComponents.Cartridge;
 using GameBoyEmulator.HardwareComponents.CPU;
+using GameBoyEmulator.HardwareComponents.DMA;
 using GameBoyEmulator.HardwareComponents.Timer;
 
 namespace GameBoyEmulator.HardwareComponents.DataBus
 {
     public interface IBus
     {
+        IDma Dma { get; }
         void AttachCpu(ICpu cpu, ITimer timer);
 
         byte Read(ushort address);

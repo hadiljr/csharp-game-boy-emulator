@@ -4,36 +4,33 @@ using System.Text;
 
 namespace GameBoyEmulator.HardwareComponents.PPU
 {
-    public static class Ppu
+    public class Ppu : IPpu
     {
 
-        public static void Init()
+        
+
+        public void Tick()
         {
 
         }
 
-        public static void Tick()
-        {
-
-        }
-
-        public static void OamWrite(UInt16 address, byte value)
+        public void OamWrite(UInt16 address, byte value)
         {
             //TODO
         }
 
-        public static byte OamRead(UInt16 address)
+        public byte OamRead(UInt16 address)
         {
             //TODO
             return 0;
         }
 
-        public static void VRamWrite(UInt16 address, byte value)
+        public void VRamWrite(UInt16 address, byte value)
         {
             //TODO
         }
 
-        public static byte VRamRead(UInt16 address)
+        public byte VRamRead(UInt16 address)
         {
             //TODO
             return 0;

@@ -10,14 +10,18 @@ namespace GameBoyEmulator.HardwareComponents.DMA
         private readonly IBus _bus;
         private readonly IPpu _ppu;
 
-        public Dma(byte startValue, IBus bus, IPpu ppu)
+        public Dma( IBus bus, IPpu ppu)
+        {
+            _bus = bus;
+            _ppu = ppu;
+        }
+
+        public void Start(byte value)
         {
             ctx.active = true;
             ctx.@byte = 0;
             ctx.startDelay = 2;
-            ctx.value = startValue;
-            _bus = bus;
-            _ppu = ppu;
+            ctx.value = value;
         }
 
         public void Tick()

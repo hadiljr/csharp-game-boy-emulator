@@ -1,4 +1,5 @@
 ﻿using GameBoyEmulator.HardwareComponents.DataBus;
+using Serilog;
 using System;
 
 namespace GameBoyEmulator.Util.Debuger
@@ -27,7 +28,13 @@ namespace GameBoyEmulator.Util.Debuger
         {
             if (!string.IsNullOrWhiteSpace(msg))
             {
-                Console.Write(msg);
+                Log.Debug($"DBG: {msg}");
+                if (msg.Contains("Passed") || msg.Contains("Error") || msg.Contains("Failed"))
+                {
+                    Log.Information($"DBG: {msg}");
+                    Environment.Exit(-1);
+                }
+                
 
             }
         }

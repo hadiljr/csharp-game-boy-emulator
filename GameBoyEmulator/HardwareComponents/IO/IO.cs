@@ -1,4 +1,5 @@
 ﻿using GameBoyEmulator.HardwareComponents.CPU;
+using GameBoyEmulator.HardwareComponents.DMA;
 using GameBoyEmulator.HardwareComponents.Timer;
 using System;
 
@@ -10,11 +11,13 @@ namespace GameBoyEmulator.HardwareComponents.IO
 
         private readonly ICpu _cpu;
         private readonly ITimer _timer;
+        private readonly IDma _dma;
 
-        public IO(ICpu cpu, ITimer timer)
+        public IO(ICpu cpu, ITimer timer, IDma dma)
         {
             _cpu = cpu;
             _timer = timer;
+            _dma = dma;
         }
 
         public byte Read(UInt16 address)
@@ -66,6 +69,13 @@ namespace GameBoyEmulator.HardwareComponents.IO
             if (address == 0xFF0F)
             {
                 _cpu.State.InterruptionFlags = value;
+                return;
+
+            }
+
+            if (address == 0xFF46)
+            {
+                _dma.Start( value);
                 return;
 
             }

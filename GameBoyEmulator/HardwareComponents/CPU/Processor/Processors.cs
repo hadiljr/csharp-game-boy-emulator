@@ -4,6 +4,7 @@ using GameBoyEmulator.HardwareComponents.DataBus;
 using GameBoyEmulator.HardwareComponents.ProgramStack;
 using GameBoyEmulator.Util.Bit;
 using GameBoyEmulator.Util.Extensions;
+using Serilog;
 using System;
 
 namespace GameBoyEmulator.HardwareComponents.CPU.Processor
@@ -13,13 +14,13 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
         private readonly ICpu _cpu;
         private readonly IBus _bus;
 
-        
+
 
         public Processors(ICpu cpu, IBus bus)
         {
             _cpu = cpu;
             _bus = bus;
-            
+
         }
 
         public void ProcessIN_NONE()
@@ -42,8 +43,9 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             if (_cpu.State.DestinationIsMemory)
             {
                 //16 bit register
-                if (_cpu.State.CurrentInstruction.Register2.Value >= RegisterType.RT_AF)
+                if (_cpu.State.CurrentInstruction.Register2!=null && Is16BitRegisterType(_cpu.State.CurrentInstruction.Register2.Value))
                 {
+
                     _cpu.CallCicles(1);
                     _bus.Write16(_cpu.State.MemoryDestination, _cpu.State.FetchedData);
 
@@ -52,7 +54,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
                 {
                     _bus.Write(_cpu.State.MemoryDestination, (byte)_cpu.State.FetchedData);
                 }
-
+                _cpu.CallCicles(1);
                 return;
             }
 
@@ -64,7 +66,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
                 SetCpuFlags(BIT_POSITION.OFF, BIT_POSITION.OFF, hflag.ToBitPosition(), cflag.ToBitPosition());
 
                 var reg2Data = _cpu.ReadRegister(_cpu.State.CurrentInstruction.Register2.Value);
-                var data = _cpu.State.FetchedData;
+                var data = (sbyte)_cpu.State.FetchedData;
                 _cpu.SetRegister(_cpu.State.CurrentInstruction.Register1.Value, (UInt16)(reg2Data + data));
 
                 return;
@@ -77,6 +79,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
         {
             if (_cpu.State.CurrentInstruction.Register1.Value == RegisterType.RT_A)
             {
+
                 var data = _bus.Read((UInt16)(0xFF00 | _cpu.State.FetchedData));
                 _cpu.SetRegister(_cpu.State.CurrentInstruction.Register1.Value, data);
             }
@@ -92,7 +95,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
         {
             _cpu.State.Registers.A ^= Convert.ToByte(_cpu.State.FetchedData & 0xFF);
             BIT_POSITION z = _cpu.State.Registers.A == 0 ? BIT_POSITION.ON : BIT_POSITION.OFF;
-            SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF);
+            SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF);
         }
 
         public void ProcessIN_JP()
@@ -102,7 +105,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
         public void ProcessIN_JR()
         {
-            var data = _cpu.State.FetchedData & 0xFF;
+            var data = (sbyte)(_cpu.State.FetchedData & 0xFF);
             UInt16 adress = (UInt16)(_cpu.State.Registers.PC + data);
             GotoAddress(adress, false);
         }
@@ -114,7 +117,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
         public void ProcessIN_RST()
         {
-            GotoAddress( _cpu.State.CurrentInstruction.Parameter.Value, true);
+            GotoAddress(_cpu.State.CurrentInstruction.Parameter.Value, true);
         }
 
         public void ProcessIN_RET()
@@ -170,7 +173,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
             byte lo = (byte)(_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) & 0xFF);
             _cpu.CallCicles(1);
-            _cpu.GetStack().Push(hi);
+            _cpu.GetStack().Push(lo);
 
             _cpu.CallCicles(1);
         }
@@ -199,7 +202,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
             if ((_cpu.State.CurrentOpcode & 0x03) == 0x03) return;
 
-            SetCpuFlags( (value == 0).ToBitPosition(), BIT_POSITION.OFF, ((value & 0x0F) == 0).ToBitPosition(), BIT_POSITION.SAME);
+            SetCpuFlags((value == 0).ToBitPosition(), BIT_POSITION.OFF, ((value & 0x0F) == 0).ToBitPosition(), BIT_POSITION.SAME);
         }
 
         public void ProcessIN_DEC()
@@ -225,7 +228,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
             if ((_cpu.State.CurrentOpcode & 0x0B) == 0x0B) return;
 
-            SetCpuFlags( (value == 0).ToBitPosition(), BIT_POSITION.ON, ((value & 0x0F) == 0x0F).ToBitPosition(), BIT_POSITION.SAME);
+            SetCpuFlags((value == 0).ToBitPosition(), BIT_POSITION.ON, ((value & 0x0F) == 0x0F).ToBitPosition(), BIT_POSITION.SAME);
         }
 
         public void ProcessIN_SUB()
@@ -236,7 +239,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             BIT_POSITION c = ((_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) - _cpu.State.FetchedData) < 0).ToBitPosition();
 
             _cpu.SetRegister(_cpu.State.CurrentInstruction.Register1.Value, value);
-            SetCpuFlags( z, BIT_POSITION.ON, h, c);
+            SetCpuFlags(z, BIT_POSITION.ON, h, c);
         }
 
         public void ProcessIN_SBC()
@@ -248,14 +251,14 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
 
             _cpu.SetRegister(_cpu.State.CurrentInstruction.Register1.Value, (UInt16)(_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) - value));
-            SetCpuFlags( z, BIT_POSITION.ON, h, c);
+            SetCpuFlags(z, BIT_POSITION.ON, h, c);
         }
 
         public void ProcessIN_ADC()
         {
             UInt16 data = _cpu.State.FetchedData;
             UInt16 regA = _cpu.State.Registers.A;
-            UInt16 flagC = Convert.ToUInt16(_cpu.State.ZFlag());
+            UInt16 flagC = Convert.ToUInt16(_cpu.State.CFlag());
 
             _cpu.State.Registers.A = (byte)((regA + data + flagC) & 0xFF);
 
@@ -263,42 +266,42 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             BIT_POSITION h = ((regA & 0xF) + (data & 0xF) + flagC > 0xF).ToBitPosition();
             BIT_POSITION c = (regA + data + flagC > 0xFF).ToBitPosition();
 
-            SetCpuFlags( z, BIT_POSITION.OFF, h, c);
+            SetCpuFlags(z, BIT_POSITION.OFF, h, c);
         }
 
         public void ProcessIN_ADD()
         {
-            UInt16 value = (UInt16)(_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) + _cpu.State.FetchedData);
+            UInt32 value = (UInt32)(_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) + _cpu.State.FetchedData);
             bool is16Bit = Is16BitRegisterType(_cpu.State.CurrentInstruction.Register1.Value);
 
             if (is16Bit) _cpu.CallCicles(1);
 
             if (_cpu.State.CurrentInstruction.Register1.Value == RegisterType.RT_SP)
             {
-                value = (UInt16)(_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) + (char)_cpu.State.FetchedData);
+                value = (UInt16)(_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) + (sbyte)_cpu.State.FetchedData);
             }
 
 
-            BIT_POSITION z = (value == 0).ToBitPosition();
+            BIT_POSITION z = ((value & 0xFF) == 0).ToBitPosition();
             BIT_POSITION h = ((_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) & 0xF) + (_cpu.State.FetchedData & 0xF) >= 0x10).ToBitPosition();
             BIT_POSITION c = ((_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) & 0xFF) + (_cpu.State.FetchedData & 0xFF) >= 0x100).ToBitPosition();
 
             if (is16Bit)
             {
-                z = BIT_POSITION.OFF;
+                z = BIT_POSITION.SAME;
                 h = ((_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) & 0xFFF) + (_cpu.State.FetchedData & 0xFFF) >= 0x1000).ToBitPosition();
                 c = ((_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) + _cpu.State.FetchedData) >= 0x10000).ToBitPosition();
             }
 
             if (_cpu.State.CurrentInstruction.Register1.Value == RegisterType.RT_SP)
             {
-                z = BIT_POSITION.ON;
+                z = BIT_POSITION.OFF;
                 h = ((_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) & 0xF) + (_cpu.State.FetchedData & 0xF) >= 0x10).ToBitPosition();
                 c = ((_cpu.ReadRegister(_cpu.State.CurrentInstruction.Register1.Value) & 0xFF) + (_cpu.State.FetchedData & 0xFF) >= 0x100).ToBitPosition();
             }
 
             _cpu.SetRegister(_cpu.State.CurrentInstruction.Register1.Value, (UInt16)(value & 0xFFFF));
-            SetCpuFlags( z, BIT_POSITION.OFF, h, c);
+            SetCpuFlags(z, BIT_POSITION.OFF, h, c);
         }
 
         public void ProcessIN_CB()
@@ -318,7 +321,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
                 case 1:
                     //BIT
                     var zFlag = (!Convert.ToBoolean(registerValue & (1 << bit))).ToBitPosition();
-                    SetCpuFlags( zFlag, BIT_POSITION.OFF, BIT_POSITION.ON, BIT_POSITION.SAME);
+                    SetCpuFlags(zFlag, BIT_POSITION.OFF, BIT_POSITION.ON, BIT_POSITION.SAME);
                     return;
                 case 2:
                     //RST
@@ -332,7 +335,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
                     return;
             }
 
-            bool cFlag = _cpu.State.ZFlag();
+            bool cFlag = _cpu.State.CFlag();
 
             switch (bit)
             {
@@ -347,7 +350,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
                     }
 
                     _cpu.SetRegister8bits(register, result);
-                    SetCpuFlags( (result == 0).ToBitPosition(), BIT_POSITION.OFF, BIT_POSITION.OFF, setC.ToBitPosition());
+                    SetCpuFlags((result == 0).ToBitPosition(), BIT_POSITION.OFF, BIT_POSITION.OFF, setC.ToBitPosition());
                     return;
 
                 case 1:
@@ -359,19 +362,19 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
                     var z = (!(Convert.ToBoolean(registerValue))).ToBitPosition();
                     var c = Convert.ToBoolean(old & 1).ToBitPosition();
-                    SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
+                    SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
                     return;
 
                 case 2:
                     //RL
                     old = registerValue;
                     registerValue <<= 1;
-                    registerValue = (byte)(registerValue | (old << 7));
+                    registerValue |= Convert.ToByte(cFlag);
                     _cpu.SetRegister8bits(register, registerValue);
 
                     z = (!(Convert.ToBoolean(registerValue))).ToBitPosition();
-                    c = (!Convert.ToBoolean(old & 0x80)).ToBitPosition();
-                    SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
+                    c = (Convert.ToBoolean(old & 0x80)).ToBitPosition();
+                    SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
                     return;
 
                 case 3:
@@ -383,7 +386,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
                     z = (!(Convert.ToBoolean(registerValue))).ToBitPosition();
                     c = Convert.ToBoolean(old & 1).ToBitPosition();
-                    SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
+                    SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
                     return;
 
                 case 4:
@@ -394,18 +397,18 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
                     _cpu.SetRegister8bits(register, registerValue);
 
                     z = (!(Convert.ToBoolean(registerValue))).ToBitPosition();
-                    c = (!Convert.ToBoolean(old & 0x80)).ToBitPosition();
-                    SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
+                    c = (Convert.ToBoolean(old & 0x80)).ToBitPosition();
+                    SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
                     return;
 
                 case 5:
                     //SRA
-                    old = (byte)(registerValue >> 1);
+                    old = (byte)((sbyte)registerValue >> 1);
                     _cpu.SetRegister8bits(register, old);
 
                     z = (!(Convert.ToBoolean(old))).ToBitPosition();
                     c = Convert.ToBoolean(registerValue & 1).ToBitPosition();
-                    SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
+                    SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
                     return;
                 case 6:
                     //SRA
@@ -414,7 +417,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
                     z = (registerValue == 0).ToBitPosition();
 
-                    SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF);
+                    SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF);
                     return;
 
                 case 7:
@@ -425,7 +428,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
                     z = (!(Convert.ToBoolean(old))).ToBitPosition();
                     c = Convert.ToBoolean(registerValue & 1).ToBitPosition();
-                    SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
+                    SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
                     return;
             }
         }
@@ -434,14 +437,14 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
         {
             _cpu.State.Registers.A &= (byte)_cpu.State.FetchedData;
             var z = (_cpu.State.Registers.A == 0).ToBitPosition();
-            SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.ON, BIT_POSITION.OFF);
+            SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.ON, BIT_POSITION.OFF);
         }
 
         public void ProcessIN_OR()
         {
             _cpu.State.Registers.A |= (byte)(_cpu.State.FetchedData & 0xFF);
             var z = (_cpu.State.Registers.A == 0).ToBitPosition();
-            SetCpuFlags( z, BIT_POSITION.OFF, BIT_POSITION.ON, BIT_POSITION.OFF);
+            SetCpuFlags(z, BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF);
         }
 
         public void ProcessIN_CP()
@@ -451,18 +454,19 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             var z = (result == 0).ToBitPosition();
             var h = (((_cpu.State.Registers.A & 0x0F) - (_cpu.State.FetchedData & 0x0F)) < 0).ToBitPosition();
             var c = (result < 0).ToBitPosition();
-            SetCpuFlags( z, BIT_POSITION.ON, h, c);
+            SetCpuFlags(z, BIT_POSITION.ON, h, c);
         }
 
         public void ProcessIN_RRA()
         {
             byte carry = Convert.ToByte(_cpu.State.CFlag());
+            var cFlag = Convert.ToBoolean(_cpu.State.Registers.A & 1).ToBitPosition();
 
             _cpu.State.Registers.A >>= 1;
             _cpu.State.Registers.A = (byte)(_cpu.State.Registers.A | (carry << 7));
 
-            var cFlag = Convert.ToBoolean(_cpu.State.Registers.A & 1).ToBitPosition();
-            SetCpuFlags( BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF, cFlag);
+
+            SetCpuFlags(BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF, cFlag);
         }
 
         public void ProcessIN_RLCA()
@@ -472,7 +476,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             var cFlag = Convert.ToBoolean(c).ToBitPosition();
             result = (byte)((result << 1) | c);
             _cpu.State.Registers.A = result;
-            SetCpuFlags( BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF, cFlag);
+            SetCpuFlags(BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF, cFlag);
         }
 
         public void ProcessIN_RRCA()
@@ -482,7 +486,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             _cpu.State.Registers.A = (byte)(_cpu.State.Registers.A | (b << 7));
 
             var cFlag = Convert.ToBoolean(b).ToBitPosition();
-            SetCpuFlags( BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF, cFlag);
+            SetCpuFlags(BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF, cFlag);
         }
 
         public void ProcessIN_RLA()
@@ -494,7 +498,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
             _cpu.State.Registers.A = (byte)((reg << 1) | cFlagByteValue);
 
             var cFlag = Convert.ToBoolean(result).ToBitPosition();
-            SetCpuFlags( BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF, cFlag);
+            SetCpuFlags(BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.OFF, cFlag);
         }
 
         public void ProcessIN_STOP()
@@ -522,24 +526,24 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
 
             var z = (_cpu.State.Registers.A == 0).ToBitPosition();
             var c = Convert.ToBoolean(fc).ToBitPosition();
-            SetCpuFlags( z, BIT_POSITION.SAME, BIT_POSITION.OFF, c);
+            SetCpuFlags(z, BIT_POSITION.SAME, BIT_POSITION.OFF, c);
         }
 
         public void ProcessIN_CPL()
         {
             _cpu.State.Registers.A = (byte)~_cpu.State.Registers.A;
-            SetCpuFlags( BIT_POSITION.SAME, BIT_POSITION.ON, BIT_POSITION.ON, BIT_POSITION.SAME);
+            SetCpuFlags(BIT_POSITION.SAME, BIT_POSITION.ON, BIT_POSITION.ON, BIT_POSITION.SAME);
         }
 
         public void ProcessIN_SCF()
         {
-            SetCpuFlags( BIT_POSITION.SAME, BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.ON);
+            SetCpuFlags(BIT_POSITION.SAME, BIT_POSITION.OFF, BIT_POSITION.OFF, BIT_POSITION.ON);
         }
 
         public void ProcessIN_CCF()
         {
             var c = Convert.ToBoolean(Convert.ToInt32(_cpu.State.CFlag()) ^ 1).ToBitPosition();
-            SetCpuFlags( BIT_POSITION.SAME, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
+            SetCpuFlags(BIT_POSITION.SAME, BIT_POSITION.OFF, BIT_POSITION.OFF, c);
         }
 
         public void ProcessIN_HALT()

@@ -7,9 +7,9 @@ namespace GameBoyEmulator.HardwareComponents.CPU
     {
         internal void HandleInterrupts()
         {
-            var IntAndAddress = GetInterruptTypeAndAddress(ctx);
-            HandleInterrupst(IntAndAddress.Item2, IntAndAddress.Item1);
-            //_context.EnableIME = false;
+            var intAndAddress = GetInterruptTypeAndAddress(ctx);
+            if(intAndAddress!=null)
+                HandleInterrupst(intAndAddress.Item2, intAndAddress.Item1);
         }
 
         public void RequestInterrupts(InterruptType interruptType)
@@ -22,7 +22,7 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             _stack.Push16(ctx.Registers.PC);
             ctx.Registers.PC = address;
 
-            ctx.InterruptionFlags &= (byte)interruptType;
+            ctx.InterruptionFlags &= (byte)(~interruptType);
             ctx.Halted = false;
             ctx.InterruptionMasterEnabled = false;
         }
@@ -49,14 +49,13 @@ namespace GameBoyEmulator.HardwareComponents.CPU
             {
                 return new Tuple<InterruptType, byte>(InterruptType.IT_JOYPAD, 0x60);
             }
-
-            throw new NotImplementedException("Interruption Not implemented");
+            return null;
         }
 
         private bool InterruptionCheck(CpuState ctx, InterruptType interruptType)
         {
             return (Convert.ToBoolean(ctx.InterruptionFlags & (int)interruptType) &&
-                Convert.ToBoolean(ctx.InterruptionFlags & (int)interruptType));
+                Convert.ToBoolean(ctx.IeRegister & (int)interruptType));
 
 
         }

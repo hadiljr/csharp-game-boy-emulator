@@ -83,6 +83,9 @@ namespace GameBoyEmulator.HardwareComponents.CPU
                     break;
                 case RegisterType.RT_E:
                     ctx.Registers.E = (byte)(value & 0xFF);
+                    break; 
+                case RegisterType.RT_H:
+                    ctx.Registers.H = (byte)(value & 0xFF);
                     break;
                 case RegisterType.RT_L:
                     ctx.Registers.L = (byte)(value & 0xFF);
@@ -143,6 +146,9 @@ namespace GameBoyEmulator.HardwareComponents.CPU
                     break;
                 case RegisterType.RT_E:
                     ctx.Registers.E = (byte)(value & 0xFF);
+                    break; 
+                case RegisterType.RT_H:
+                    ctx.Registers.H = (byte)(value & 0xFF);
                     break;
                 case RegisterType.RT_L:
                     ctx.Registers.L = (byte)(value & 0xFF);

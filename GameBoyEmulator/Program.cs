@@ -1,6 +1,7 @@
 ﻿using GameBoyEmulator.Emulator;
 using Serilog;
 using System;
+using System.IO;
 
 namespace GameBoyEmulator
 {
@@ -9,18 +10,19 @@ namespace GameBoyEmulator
 
         static void Main(string[] args)
         {
-            try
-            {
-                CreateLogger();
-                var gbEmulator = new GbEmulator(args[0], Emulator.Core.RunType.DEBUG);
-                gbEmulator.Run();
-                Log.CloseAndFlush();
-            }
-            catch(Exception ex)
-            {
-                Log.Fatal(ex, ex.Message);
-                Log.CloseAndFlush();
-            }
+            //try
+            //{
+            File.Delete("./debug.txt");
+            CreateLogger();
+            var gbEmulator = new GbEmulator(args[0], Emulator.Core.RunType.DEBUG);
+            gbEmulator.Run();
+            Log.CloseAndFlush();
+            //}
+            //catch(Exception ex)
+            //{
+            //    Log.Fatal(ex, ex.Message);
+            //    Log.CloseAndFlush();
+            //}
 
 
         }
@@ -30,7 +32,8 @@ namespace GameBoyEmulator
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Console(outputTemplate:"{Message:lj}{NewLine}")
+                .WriteTo.Console(outputTemplate: "{Message:lj}{NewLine}", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information)
+                .WriteTo.File("./debug.txt", outputTemplate: "{Message:lj}{NewLine}")
                 .CreateLogger();
         }
     }
