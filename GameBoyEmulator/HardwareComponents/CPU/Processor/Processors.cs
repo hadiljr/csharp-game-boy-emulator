@@ -1,10 +1,7 @@
-﻿using GameBoyEmulator.Emulator;
-using GameBoyEmulator.HardwareComponents.CPU.Instructions;
+﻿using GameBoyEmulator.HardwareComponents.CPU.Instructions;
 using GameBoyEmulator.HardwareComponents.DataBus;
-using GameBoyEmulator.HardwareComponents.ProgramStack;
 using GameBoyEmulator.Util.Bit;
 using GameBoyEmulator.Util.Extensions;
-using Serilog;
 using System;
 
 namespace GameBoyEmulator.HardwareComponents.CPU.Processor
@@ -13,8 +10,6 @@ namespace GameBoyEmulator.HardwareComponents.CPU.Processor
     {
         private readonly ICpu _cpu;
         private readonly IBus _bus;
-
-
 
         public Processors(ICpu cpu, IBus bus)
         {
